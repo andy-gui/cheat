@@ -1,0 +1,99 @@
+-- Mock Player Testing Script
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player.PlayerGui
+
+local speedButton = Instance.new("TextButton")
+speedButton.Size = UDim2.new(0, 100, 0, 50)
+speedButton.Position = UDim2.new(0, 10, 0, 10)
+speedButton.Text = "Speed Hack"
+speedButton.Parent = screenGui
+
+local locateButton = Instance.new("TextButton")
+locateButton.Size = UDim2.new(0, 100, 0, 50)
+locateButton.Position = UDim2.new(0, 120, 0, 10)
+locateButton.Text = "Locate Player"
+locateButton.Parent = screenGui
+
+local aimButton = Instance.new("TextButton")
+aimButton.Size = UDim2.new(0, 100, 0, 50)
+aimButton.Position = UDim2.new(0, 230, 0, 10)
+aimButton.Text = "Aimbot"
+aimButton.Parent = screenGui
+
+-- Variables
+local speedEnabled = false
+local locateEnabled = false
+local aimEnabled = false
+
+-- Speed Hack Simulation (Limited to 100-300 studs/sec)
+speedButton.MouseButton1Click:Connect(function()
+    speedEnabled = not speedEnabled
+    if speedEnabled then
+        humanoid.WalkSpeed = 100 -- Start at 100 studs/sec
+        speedButton.Text = "Speed Hack: ON"
+
+        -- Gradually increase speed up to 300 studs/sec
+        while speedEnabled and humanoid.WalkSpeed < 300 do
+            humanoid.WalkSpeed = humanoid.WalkSpeed + 10
+            wait(0.5) -- Increase speed every 0.5 seconds
+        end
+    else
+        humanoid.WalkSpeed = 16 -- Reset to default speed
+        speedButton.Text = "Speed Hack: OFF"
+    end
+end)
+
+-- Locate Player Simulation
+locateButton.MouseButton1Click:Connect(function()
+    locateEnabled = not locateEnabled
+    if locateEnabled then
+        -- Highlight the player's character
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = character
+        locateButton.Text = "Locate Player: ON"
+    else
+        -- Remove the highlight
+        for _, child in pairs(character:GetChildren()) do
+            if child:IsA("Highlight") then
+                child:Destroy()
+            end
+        end
+        locateButton.Text = "Locate Player: OFF"
+    end
+end)
+
+-- Aimbot Simulation
+aimButton.MouseButton1Click:Connect(function()
+    aimEnabled = not aimEnabled
+    if aimEnabled then
+        aimButton.Text = "Aimbot: ON"
+        -- Simulate aiming at the nearest player
+        while aimEnabled do
+            local nearestPlayer = nil
+            local nearestDistance = math.huge
+
+            for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+                if otherPlayer ~= player and otherPlayer.Character then
+                    local distance = (otherPlayer.Character.PrimaryPart.Position - character.PrimaryPart.Position).Magnitude
+                    if distance < nearestDistance then
+                        nearestDistance = distance
+                        nearestPlayer = otherPlayer
+                    end
+                end
+            end
+
+            if nearestPlayer then
+                -- Simulate aiming by printing the nearest player's name
+                print("Aiming at: " .. nearestPlayer.Name)
+            end
+            wait(1) -- Check every second
+        end
+    else
+        aimButton.Text = "Aimbot: OFF"
+    end
+end)
