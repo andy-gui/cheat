@@ -7,67 +7,115 @@ local humanoid = character:WaitForChild("Humanoid")
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = player.PlayerGui
 
-local speedButton = Instance.new("TextButton")
-speedButton.Size = UDim2.new(0, 100, 0, 50)
-speedButton.Position = UDim2.new(0, 10, 0, 10)
-speedButton.Text = "Speed"
-speedButton.Parent = screenGui
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100) -- Center of the screen
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.new(0, 0, 0) -- Black background
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
 
-local locateButton = Instance.new("TextButton")
-locateButton.Size = UDim2.new(0, 100, 0, 50)
-locateButton.Position = UDim2.new(0, 120, 0, 10)
-locateButton.Text = "Radar"
-locateButton.Parent = screenGui
+-- Title Bar (for dragging)
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1) -- Dark gray
+titleBar.BorderSizePixel = 0
+titleBar.Parent = mainFrame
 
-local aimButton = Instance.new("TextButton")
-aimButton.Size = UDim2.new(0, 100, 0, 50)
-aimButton.Position = UDim2.new(0, 230, 0, 10)
-aimButton.Text = "Aimbot"
-aimButton.Parent = screenGui
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0.8, 0, 1, 0)
+title.Position = UDim2.new(0.1, 0, 0, 0)
+title.Text = "Testing Tool"
+title.TextColor3 = Color3.new(0, 1, 1) -- Cyan text
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.Parent = titleBar
 
--- Variables
-local speedEnabled = false
-local locateEnabled = false
-local aimEnabled = false
+-- Collapse/Expand Icon
+local collapseIcon = Instance.new("TextButton")
+collapseIcon.Size = UDim2.new(0, 30, 0, 30)
+collapseIcon.Position = UDim2.new(1, -30, 0, 0)
+collapseIcon.Text = "-"
+collapseIcon.TextColor3 = Color3.new(0, 1, 1) -- Cyan text
+collapseIcon.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2) -- Dark gray
+collapseIcon.BorderSizePixel = 0
+collapseIcon.Parent = titleBar
 
--- Speed Hack Simulation (Limited to 100-300 studs/sec)
-speedButton.MouseButton1Click:Connect(function()
-    speedEnabled = not speedEnabled
-    if speedEnabled then
-        humanoid.WalkSpeed = 100 -- Start at 100 studs/sec
-        speedButton.Text = "Speed Hack: ON"
+-- Speed Hack Slider
+local speedSlider = Instance.new("TextButton")
+speedSlider.Size = UDim2.new(0.8, 0, 0, 30)
+speedSlider.Position = UDim2.new(0.1, 0, 0.2, 0)
+speedSlider.Text = "Speed Hack: 100"
+speedSlider.TextColor3 = Color3.new(0, 1, 1) -- Cyan text
+speedSlider.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2) -- Dark gray background
+speedSlider.BorderSizePixel = 0
+speedSlider.Parent = mainFrame
 
-        -- Gradually increase speed up to 300 studs/sec
-        while speedEnabled and humanoid.WalkSpeed < 300 do
-            humanoid.WalkSpeed = humanoid.WalkSpeed + 10
-            wait(0.5) -- Increase speed every 0.5 seconds
-        end
-    else
-        humanoid.WalkSpeed = 16 -- Reset to default speed
-        speedButton.Text = "Speed Hack: OFF"
+local speedValue = 100
+speedSlider.MouseButton1Click:Connect(function()
+    speedValue = speedValue + 50
+    if speedValue > 300 then
+        speedValue = 100
     end
+    speedSlider.Text = "Speed Hack: " .. speedValue
+    humanoid.WalkSpeed = speedValue
 end)
 
--- Locate Player Simulation
+-- Locate Player Button
+local locateButton = Instance.new("TextButton")
+locateButton.Size = UDim2.new(0.8, 0, 0, 30)
+locateButton.Position = UDim2.new(0.1, 0, 0.4, 0)
+locateButton.Text = "Locate Player"
+locateButton.TextColor3 = Color3.new(0, 1, 1) -- Cyan text
+locateButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2) -- Dark gray background
+locateButton.BorderSizePixel = 0
+locateButton.Parent = mainFrame
+
+local locateEnabled = false
 locateButton.MouseButton1Click:Connect(function()
     locateEnabled = not locateEnabled
     if locateEnabled then
-        -- Highlight the player's character
-        local highlight = Instance.new("Highlight")
-        highlight.Parent = character
+        -- Highlight all players within 30,000 studs
+        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+            if otherPlayer ~= player and otherPlayer.Character then
+                local distance = (otherPlayer.Character.PrimaryPart.Position - character.PrimaryPart.Position).Magnitude
+                if distance <= 30000 then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Parent = otherPlayer.Character
+                end
+            end
+        end
         locateButton.Text = "Locate Player: ON"
     else
-        -- Remove the highlight
-        for _, child in pairs(character:GetChildren()) do
-            if child:IsA("Highlight") then
-                child:Destroy()
+        -- Remove highlights from all players
+        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+            if otherPlayer.Character then
+                for _, child in pairs(otherPlayer.Character:GetChildren()) do
+                    if child:IsA("Highlight") then
+                        child:Destroy()
+                    end
+                end
             end
         end
         locateButton.Text = "Locate Player: OFF"
     end
 end)
 
--- Aimbot Simulation
+-- Aimbot Button
+local aimButton = Instance.new("TextButton")
+aimButton.Size = UDim2.new(0.8, 0, 0, 30)
+aimButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+aimButton.Text = "Aimbot"
+aimButton.TextColor3 = Color3.new(0, 1, 1) -- Cyan text
+aimButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2) -- Dark gray background
+aimButton.BorderSizePixel = 0
+aimButton.Parent = mainFrame
+
+local aimEnabled = false
 aimButton.MouseButton1Click:Connect(function()
     aimEnabled = not aimEnabled
     if aimEnabled then
@@ -90,10 +138,56 @@ aimButton.MouseButton1Click:Connect(function()
             if nearestPlayer then
                 -- Simulate aiming by printing the nearest player's name
                 print("Aiming at: " .. nearestPlayer.Name)
+                -- Optional: Rotate the player's character to face the nearest player
+                character:SetPrimaryPartCFrame(CFrame.lookAt(character.PrimaryPart.Position, nearestPlayer.Character.PrimaryPart.Position))
             end
             wait(1) -- Check every second
         end
     else
         aimButton.Text = "Aimbot: OFF"
+    end
+end)
+
+-- Draggable UI
+local dragging = false
+local dragInput, dragStart, startPos
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+titleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Collapse/Expand UI
+local isCollapsed = false
+collapseIcon.MouseButton1Click:Connect(function()
+    isCollapsed = not isCollapsed
+    if isCollapsed then
+        mainFrame.Size = UDim2.new(0, 300, 0, 30) -- Collapse to title bar only
+        collapseIcon.Text = "+"
+    else
+        mainFrame.Size = UDim2.new(0, 300, 0, 200) -- Expand to full size
+        collapseIcon.Text = "-"
     end
 end)
