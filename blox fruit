@@ -76,6 +76,7 @@ locateButton.BorderSizePixel = 0
 locateButton.Parent = mainFrame
 
 local locateEnabled = false
+local highlights = {} -- Store highlights for easy removal
 locateButton.MouseButton1Click:Connect(function()
     locateEnabled = not locateEnabled
     if locateEnabled then
@@ -86,21 +87,17 @@ locateButton.MouseButton1Click:Connect(function()
                 if distance <= 30000 then
                     local highlight = Instance.new("Highlight")
                     highlight.Parent = otherPlayer.Character
+                    highlights[otherPlayer] = highlight
                 end
             end
         end
         locateButton.Text = "Locate Player: ON"
     else
         -- Remove highlights from all players
-        for _, otherPlayer in pairs(game.Players:GetPlayers()) do
-            if otherPlayer.Character then
-                for _, child in pairs(otherPlayer.Character:GetChildren()) do
-                    if child:IsA("Highlight") then
-                        child:Destroy()
-                    end
-                end
-            end
+        for otherPlayer, highlight in pairs(highlights) do
+            highlight:Destroy()
         end
+        highlights = {}
         locateButton.Text = "Locate Player: OFF"
     end
 end)
@@ -153,7 +150,7 @@ local dragging = false
 local dragInput, dragStart, startPos
 
 titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
@@ -167,7 +164,7 @@ titleBar.InputBegan:Connect(function(input)
 end)
 
 titleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
@@ -181,13 +178,22 @@ end)
 
 -- Collapse/Expand UI
 local isCollapsed = false
+local buttons = {speedSlider, locateButton, aimButton} -- Store buttons for easy hiding
 collapseIcon.MouseButton1Click:Connect(function()
     isCollapsed = not isCollapsed
     if isCollapsed then
         mainFrame.Size = UDim2.new(0, 300, 0, 30) -- Collapse to title bar only
         collapseIcon.Text = "+"
+        -- Hide all buttons
+        for _, button in pairs(buttons) do
+            button.Visible = false
+        end
     else
         mainFrame.Size = UDim2.new(0, 300, 0, 200) -- Expand to full size
         collapseIcon.Text = "-"
+        -- Show all buttons
+        for _, button in pairs(buttons) do
+            button.Visible = true
+        end
     end
 end)
