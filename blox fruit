@@ -145,9 +145,20 @@ aimButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Draggable UI
+-- Draggable UI with Boundary Checks
 local dragging = false
 local dragInput, dragStart, startPos
+
+local function clampPosition(position)
+    local screenSize = workspace.CurrentCamera.ViewportSize
+    local frameSize = mainFrame.AbsoluteSize
+    return UDim2.new(
+        math.clamp(position.X.Scale, 0, 1 - frameSize.X / screenSize.X),
+        math.clamp(position.X.Offset, 0, screenSize.X - frameSize.X),
+        math.clamp(position.Y.Scale, 0, 1 - frameSize.Y / screenSize.Y),
+        math.clamp(position.Y.Offset, 0, screenSize.Y - frameSize.Y)
+    )
+end
 
 titleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -172,7 +183,8 @@ end)
 game:GetService("UserInputService").InputChanged:Connect(function(input)
     if dragging and input == dragInput then
         local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        local newPosition = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        mainFrame.Position = clampPosition(newPosition)
     end
 end)
 
